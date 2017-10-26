@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,9 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package org.guvnor.common.services.project.builder.model;
+package org.guvnor.common.services.shared.builder.model;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -24,7 +25,8 @@ import org.jboss.errai.common.client.api.annotations.Portable;
 import org.uberfire.backend.vfs.Path;
 
 @Portable
-public class BuildMessage implements Serializable, Comparable<BuildMessage> {
+public class BuildMessage implements Serializable,
+                                     Comparable<BuildMessage> {
 
     private long id;
     private Level level;
@@ -35,6 +37,26 @@ public class BuildMessage implements Serializable, Comparable<BuildMessage> {
 
     public BuildMessage() {
 
+    }
+
+    public BuildMessage(final Level level,
+                        final String text) {
+        this.level = level;
+        this.text = text;
+    }
+
+    public BuildMessage(final long id,
+                        final Level level,
+                        final Path path,
+                        final int line,
+                        final int column,
+                        final String text) {
+        this.id = id;
+        this.level = level;
+        this.path = path;
+        this.line = line;
+        this.column = column;
+        this.text = text;
     }
 
     public void setId(long id) {
@@ -144,8 +166,4 @@ public class BuildMessage implements Serializable, Comparable<BuildMessage> {
     public int compareTo(BuildMessage other) {
         return Comparator.comparing(BuildMessage::getText).compare(this, other);
     }
-
-
-
-
 }

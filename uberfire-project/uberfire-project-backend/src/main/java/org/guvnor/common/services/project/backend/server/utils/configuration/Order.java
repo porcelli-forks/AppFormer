@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package org.guvnor.common.services.shared.validation;
+package org.guvnor.common.services.project.backend.server.utils.configuration;
 
-import java.util.List;
-
-import org.guvnor.common.services.shared.builder.model.BuildMessage;
-import org.uberfire.backend.vfs.Path;
-
-/**
- * Validation Service
+/***
+ * Used to order execution of implementations of the same interface in
  */
-public interface ValidationService<T> {
+public interface Order {
 
     /**
-     * Validate the content
-     * @param content
+     * Used by the implementor to assign and order of execution when multiple implementations are present
      * @return
      */
-    List<BuildMessage> validate(final Path path,
-                                final T content);
+    Integer getOrder();
 }

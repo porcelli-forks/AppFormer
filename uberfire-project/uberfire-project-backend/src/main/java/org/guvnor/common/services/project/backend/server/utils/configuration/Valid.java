@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package org.guvnor.common.services.shared.validation;
+package org.guvnor.common.services.project.backend.server.utils.configuration;
 
-import java.util.List;
-
-import org.guvnor.common.services.shared.builder.model.BuildMessage;
-import org.uberfire.backend.vfs.Path;
-
-/**
- * Validation Service
+/***
+ * Used to validate a state of an object in different implementations
  */
-public interface ValidationService<T> {
+public interface Valid {
 
-    /**
-     * Validate the content
-     * @param content
+    /***
+     * Signals if is in a valid state using an internal algo to check a particular implementations
      * @return
      */
-    List<BuildMessage> validate(final Path path,
-                                final T content);
+    Boolean isValid();
 }

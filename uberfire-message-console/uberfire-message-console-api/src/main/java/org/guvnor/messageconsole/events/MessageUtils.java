@@ -16,7 +16,7 @@
 
 package org.guvnor.messageconsole.events;
 
-import org.guvnor.common.services.project.builder.model.BuildMessage;
+import org.guvnor.common.services.shared.builder.model.BuildMessage;
 
 public class MessageUtils {
 

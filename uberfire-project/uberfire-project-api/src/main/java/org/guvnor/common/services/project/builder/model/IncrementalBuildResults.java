@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.guvnor.common.services.project.model.GAV;
+import org.guvnor.common.services.shared.builder.model.BuildMessage;
 import org.jboss.errai.common.client.api.annotations.Portable;
 
 @Portable

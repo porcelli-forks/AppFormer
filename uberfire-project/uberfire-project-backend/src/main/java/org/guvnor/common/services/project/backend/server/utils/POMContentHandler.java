@@ -20,24 +20,63 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import javax.enterprise.context.Dependent;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 
 import org.apache.maven.model.Build;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.guvnor.common.services.project.backend.server.utils.configuration.ConfigurationKey;
+import org.guvnor.common.services.project.backend.server.utils.configuration.ConfigurationStrategy;
 import org.guvnor.common.services.project.model.GAV;
 import org.guvnor.common.services.project.model.MavenRepository;
 import org.guvnor.common.services.project.model.POM;
 
-@Dependent
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
+
+@ApplicationScoped
 public class POMContentHandler {
 
+    private static final String COMPILE = "compile";
+    private static final String COMPILER_ID = "compilerId";
+    private static final String CONFIGURATION = "configuration";
+    private static final String COMPILER = "javac";
+    private static final String KJAR = "kjar";
+    private static final String TRUE = "true";
+    private static final String MAVEN_SKIP = "skip";
+    private static final String MAVEN_SKIP_MAIN = "skipMain";
+    private static final String MAVEN_DEFAULT_COMPILE = "default-compile";
+    private static final String MAVEN_PHASE_NONE = "none";
+    private static final String MAVEN_PLUGIN_CONFIGURATION = "configuration";
+
+    private final List<ConfigurationStrategy> configurationStrategies = new ArrayList<>();
+
     public POMContentHandler() {
-        // Weld needs this for proxying.
+    }
+
+    @Inject
+    public POMContentHandler(final Instance<ConfigurationStrategy> configuration) {
+        this(stream(configuration.spliterator(), false)
+                     .collect(toList()));
+    }
+
+    public POMContentHandler(Collection<ConfigurationStrategy> configurations) {
+        this.configurationStrategies.addAll(configurations);
     }
 
     public String toString(final POM pomModel)
@@ -48,6 +87,18 @@ public class POMContentHandler {
 
     private String toString(final POM pom,
                             final Model model) throws IOException {
+        final ConfigurationStrategy configurationStrategy = configurationStrategies.get(0);
+        final Map<ConfigurationKey, String> conf = configurationStrategy.loadConfiguration();
+
+        addDependencies(pom, model, conf);
+
+        Build build = new Build();
+        model.setBuild(build);
+        build.addPlugin(getKieMavenPlugin(conf));
+        build.addPlugin(getNewCompilerPlugin(conf));
+        build.addPlugin(getDisableMavenCompiler(conf));
+        model.setPackaging(KJAR);
+
         model.setName(pom.getName());
         model.setDescription(pom.getDescription());
         model.setArtifactId(pom.getGav().getArtifactId());
@@ -56,15 +107,9 @@ public class POMContentHandler {
 
         model.setGroupId(pom.getGav().getGroupId());
         model.setVersion(pom.getGav().getVersion());
-
-        model.setPackaging(pom.getPackaging());
-
         model.setParent(getParent(pom));
-        model.setBuild(getBuild(pom,
-                                model));
         model.setModules(getModules(pom));
         model.setRepositories(getRepositories(pom));
-        new DependencyUpdater(model.getDependencies()).updateDependencies(pom.getDependencies());
 
         StringWriter stringWriter = new StringWriter();
         new MavenXpp3Writer().write(stringWriter,
@@ -72,28 +117,107 @@ public class POMContentHandler {
         return stringWriter.toString();
     }
 
-    private Build getBuild(final POM pom,
-                           final Model model) {
-        return new BuildContentHandler().update(pom.getBuild(),
-                                                model.getBuild());
-    }
-
-    private ArrayList<Repository> getRepositories(final POM pom) {
-        ArrayList<Repository> result = new ArrayList<Repository>();
-        for (MavenRepository mavenRepository : pom.getRepositories()) {
-            result.add(fromClientModelToPom(mavenRepository));
+    private void addDependencies(final POM pom, final Model model, final Map<ConfigurationKey, String> conf) {
+        final String kieVersion = conf.get(ConfigurationKey.KIE_VERSION);
+        if (pom.getDependencies().isEmpty()) {
+            List<Dependency> dependencies = new ArrayList<>();
+            dependencies.add(getDependency("org.kie", "kie-api", kieVersion, "provided"));
+            dependencies.add(getDependency("org.optaplanner", "optaplanner-core", kieVersion, "provided"));
+            dependencies.add(getDependency("junit", "junit", "4.12", "test"));
+            model.setDependencies(dependencies);
+        } else {
+            pom.getDependencies().add(getGuvDependency(conf, "org.kie", "kie-api", kieVersion, "provided"));
+            pom.getDependencies().add(getGuvDependency(conf, "org.optaplanner", "optaplanner-core", kieVersion, "provided"));
+            pom.getDependencies().add(getGuvDependency(conf, "junit", "junit", "4.12", "test"));
+            new DependencyUpdater(model.getDependencies()).updateDependencies(pom.getDependencies());
         }
-        return result;
     }
 
-    private ArrayList<String> getModules(final POM pom) {
-        ArrayList<String> result = new ArrayList<String>();
+    private Dependency getDependency(String groupID, String artifactID, String version, String scope) {
+        Dependency dep = new Dependency();
+        dep.setGroupId(groupID);
+        dep.setArtifactId(artifactID);
+        dep.setVersion(version);
+        dep.setScope(scope);
+        return dep;
+    }
+
+    private org.guvnor.common.services.project.model.Dependency getGuvDependency(Map<ConfigurationKey, String> conf, String groupID, String artifactID, String version, String scope) {
+        org.guvnor.common.services.project.model.Dependency dep = new org.guvnor.common.services.project.model.Dependency();
+        dep.setGroupId(groupID);
+        dep.setArtifactId(artifactID);
+        dep.setVersion(version);
+        dep.setScope(scope);
+        return dep;
+    }
+
+    protected Plugin getNewCompilerPlugin(Map<ConfigurationKey, String> conf) {
+
+        Plugin newCompilerPlugin = new Plugin();
+        newCompilerPlugin.setGroupId(conf.get(ConfigurationKey.TAKARI_COMPILER_PLUGIN_GROUP));
+        newCompilerPlugin.setArtifactId(conf.get(ConfigurationKey.TAKARI_COMPILER_PLUGIN_ARTIFACT));
+        newCompilerPlugin.setVersion(conf.get(ConfigurationKey.TAKARI_COMPILER_PLUGIN_VERSION));
+
+        PluginExecution execution = new PluginExecution();
+        execution.setId(COMPILE);
+        execution.setGoals(Collections.singletonList(COMPILE));
+        execution.setPhase(COMPILE);
+
+        Xpp3Dom compilerId = new Xpp3Dom(COMPILER_ID);
+        compilerId.setValue(COMPILER);
+        Xpp3Dom configuration = new Xpp3Dom(CONFIGURATION);
+        configuration.addChild(compilerId);
+
+        execution.setConfiguration(configuration);
+        newCompilerPlugin.setExecutions(Collections.singletonList(execution));
+
+        return newCompilerPlugin;
+    }
+
+    protected Plugin getKieMavenPlugin(Map<ConfigurationKey, String> conf) {
+        String kieVersion = conf.get(ConfigurationKey.KIE_VERSION);
+        Plugin kieMavenPlugin = new Plugin();
+        kieMavenPlugin.setGroupId("org.kie");
+        kieMavenPlugin.setArtifactId("kie-maven-plugin");
+        kieMavenPlugin.setVersion(kieVersion);
+        kieMavenPlugin.setExtensions(true);
+        return kieMavenPlugin;
+    }
+
+    protected Plugin getDisableMavenCompiler(Map<ConfigurationKey, String> conf) {
+        Plugin plugin = new Plugin();
+        plugin.setArtifactId(conf.get(ConfigurationKey.MAVEN_COMPILER_PLUGIN_ARTIFACT));
+
+        Xpp3Dom skipMain = new Xpp3Dom(MAVEN_SKIP_MAIN);
+        skipMain.setValue(TRUE);
+        Xpp3Dom skip = new Xpp3Dom(MAVEN_SKIP);
+        skip.setValue(TRUE);
+
+        Xpp3Dom configuration = new Xpp3Dom(MAVEN_PLUGIN_CONFIGURATION);
+        configuration.addChild(skipMain);
+        configuration.addChild(skip);
+
+        plugin.setConfiguration(configuration);
+
+        PluginExecution exec = new PluginExecution();
+        exec.setId(MAVEN_DEFAULT_COMPILE);
+        exec.setPhase(MAVEN_PHASE_NONE);
+        plugin.setExecutions(Collections.singletonList(exec));
+        return plugin;
+    }
+
+    private List<Repository> getRepositories(final POM pom) {
+        return pom.getRepositories().stream()
+                .map(this::fromClientModelToPom)
+                .collect(toList());
+    }
+
+    private List<String> getModules(final POM pom) {
         if (pom.getModules() != null) {
-            for (String module : pom.getModules()) {
-                result.add(module);
-            }
+            return new ArrayList<>(pom.getModules());
+        } else {
+            return Collections.emptyList();
         }
-        return result;
     }
 
     private Parent getParent(final POM pom) {
@@ -126,7 +250,6 @@ public class POMContentHandler {
         to.setId(from.getId());
         to.setName(from.getName());
         to.setUrl(from.getUrl());
-
         return to;
     }
 

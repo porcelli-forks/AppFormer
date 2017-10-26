@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.guvnor.common.services.project.model.GAV;
+import org.guvnor.common.services.shared.builder.model.BuildMessage;
 import org.guvnor.common.services.shared.message.Level;
 import org.jboss.errai.common.client.api.annotations.Portable;
 

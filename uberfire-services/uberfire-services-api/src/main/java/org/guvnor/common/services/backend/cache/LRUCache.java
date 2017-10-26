@@ -15,64 +15,59 @@
  */
 package org.guvnor.common.services.backend.cache;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.kie.soup.commons.validation.PortablePreconditions;
+import static java.util.Collections.synchronizedMap;
+import static org.kie.soup.commons.validation.PortablePreconditions.checkNotNull;
 
 /**
  * A simple LRU cache keyed on Paths
  */
-public abstract class LRUCache<Path, V> implements Cache<Path, V> {
+public abstract class LRUCache<K, V> implements Cache<K, V> {
 
     private static final int MAX_ENTRIES = 20;
 
-    private Map<Path, V> cache;
+    private final Map<K, V> cache = synchronizedMap(new LinkedHashMap<K, V>(MAX_ENTRIES + 1,
+                                                                            0.75f,
+                                                                            true) {
+        public boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > MAX_ENTRIES;
+        }
+    });
 
-    public LRUCache() {
-        cache = new LinkedHashMap<Path, V>(MAX_ENTRIES + 1,
-                                           0.75f,
-                                           true) {
-            public boolean removeEldestEntry(Map.Entry eldest) {
-                return size() > MAX_ENTRIES;
-            }
-        };
-        cache = (Map) Collections.synchronizedMap(cache);
+    @Override
+    public boolean contains(K key) {
+        return cache.containsKey(checkNotNull("key", key));
     }
 
     @Override
-    public V getEntry(final Path path) {
-        PortablePreconditions.checkNotNull("path",
-                                           path);
-        return cache.get(path);
+    public void remove(K key) {
+        cache.remove(checkNotNull("key", key));
     }
 
     @Override
-    public void setEntry(final Path path,
+    public V getEntry(final K key) {
+        return cache.get(checkNotNull("key", key));
+    }
+
+    @Override
+    public void setEntry(final K key,
                          final V value) {
-        PortablePreconditions.checkNotNull("path",
-                                           path);
-        PortablePreconditions.checkNotNull("value",
-                                           value);
-        cache.put(path,
-                  value);
+        cache.put(checkNotNull("key", key), checkNotNull("value", value));
     }
 
     @Override
     public void invalidateCache() {
-        this.cache.clear();
+        cache.clear();
     }
 
     @Override
-    public void invalidateCache(final Path path) {
-        PortablePreconditions.checkNotNull("path",
-                                           path);
-        this.cache.remove(path);
+    public void invalidateCache(final K key) {
     }
 
-    public Set<Path> getKeys() {
+    public Set<K> getKeys() {
         return cache.keySet();
     }
 }

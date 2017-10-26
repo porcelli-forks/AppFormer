@@ -36,8 +36,7 @@ public class ResourceRenamedEvent extends ResourceRenamed implements ResourceEve
                                 @MapsTo("destinationPath") final Path destinationPath,
                                 @MapsTo("message") final String message,
                                 @MapsTo("sessionInfo") final SessionInfo sessionInfo) {
-        super(destinationPath,
-              message);
+        super(destinationPath, message);
         this.sourcePath = checkNotNull("sourcePath",
                                        sourcePath);
         this.sessionInfo = checkNotNull("sessionInfo",

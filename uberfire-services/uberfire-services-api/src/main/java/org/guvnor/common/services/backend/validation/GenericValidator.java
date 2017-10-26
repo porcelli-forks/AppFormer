@@ -17,7 +17,7 @@ package org.guvnor.common.services.backend.validation;
 
 import java.util.List;
 
-import org.guvnor.common.services.shared.validation.model.ValidationMessage;
+import org.guvnor.common.services.shared.builder.model.BuildMessage;
 import org.uberfire.backend.vfs.Path;
 
 /**
@@ -33,8 +33,8 @@ public interface GenericValidator {
      * @param content An String containing the resource to be validated.
      * @return Validation messages or an empty Collection if none.
      */
-    List<ValidationMessage> validate(final Path resourcePath,
-                                     final String content);
+    List<BuildMessage> validate(final Path resourcePath,
+                                final String content);
 
     /**
      * Validate an asset. Validation needs to know the Project in which the resource resides to be able
@@ -45,5 +45,5 @@ public interface GenericValidator {
      * @param resourcePath The VFS Path of the resource
      * @return Validation messages or an empty Collection if none.
      */
-    List<ValidationMessage> validate(final Path resourcePath);
+    List<BuildMessage> validate(final Path resourcePath);
 }

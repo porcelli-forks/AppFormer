@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.guvnor.common.services.builder;
 
-/**
- * Producer of IncrementalBuilderExecutorManager
- */
-public interface IncrementalBuilderExecutorManagerFactory {
+package org.guvnor.common.services.project.backend.server.utils.configuration;
 
-    IncrementalBuilderExecutorManager getExecutorManager();
+public enum ConfigurationKey {
+
+    COMPILER,
+    SOURCE_VERSION,
+    TARGET_VERSION,
+    FAIL_ON_ERROR,
+
+    MAVEN_COMPILER_PLUGIN_GROUP,
+    MAVEN_COMPILER_PLUGIN_ARTIFACT,
+    MAVEN_COMPILER_PLUGIN_VERSION,
+
+    TAKARI_COMPILER_PLUGIN_GROUP,
+    TAKARI_COMPILER_PLUGIN_ARTIFACT,
+    TAKARI_COMPILER_PLUGIN_VERSION,
+
+    KIE_MAVEN_PLUGINS,
+    KIE_MAVEN_PLUGIN,
+    KIE_TAKARI_PLUGIN,
+
+    KIE_VERSION;
 }

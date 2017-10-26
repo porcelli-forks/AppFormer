@@ -20,6 +20,10 @@ package org.guvnor.common.services.backend.cache;
  */
 public interface Cache<K, V> {
 
+    boolean contains(final K key);
+
+    void remove(final K key);
+
     /**
      * Retrieve the cache entry for the specified key.
      * @param key The cache entry key

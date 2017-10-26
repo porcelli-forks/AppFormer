@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,25 +12,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package org.guvnor.common.services.shared.validation;
+package org.guvnor.common.services.project.backend.server.utils.configuration;
 
-import java.util.List;
-
-import org.guvnor.common.services.shared.builder.model.BuildMessage;
-import org.uberfire.backend.vfs.Path;
+import java.util.Map;
 
 /**
- * Validation Service
+ * Define the behaviour of a ConfigurationStrategy,
+ * load the configuration and check if it's valid
  */
-public interface ValidationService<T> {
+public interface ConfigurationStrategy extends Valid,
+                                               Order {
 
-    /**
-     * Validate the content
-     * @param content
-     * @return
-     */
-    List<BuildMessage> validate(final Path path,
-                                final T content);
+    Map<ConfigurationKey, String> loadConfiguration();
 }
