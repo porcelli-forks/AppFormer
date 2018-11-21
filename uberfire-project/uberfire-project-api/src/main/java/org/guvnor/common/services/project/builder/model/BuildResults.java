@@ -19,8 +19,10 @@ package org.guvnor.common.services.project.builder.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.guvnor.common.services.project.model.GAV;
 import org.guvnor.common.services.shared.message.Level;
@@ -30,7 +32,7 @@ import org.jboss.errai.common.client.api.annotations.Portable;
 public class BuildResults {
 
     private GAV gav;
-    private ArrayList<BuildMessage> messages = new ArrayList<BuildMessage>();
+    private Set<BuildMessage> messages = new LinkedHashSet<>();
     private Map<String, String> parameters = new HashMap<>();
 
     public BuildResults() {
@@ -46,7 +48,7 @@ public class BuildResults {
     }
 
     public List<BuildMessage> getMessages() {
-        return Collections.unmodifiableList(messages);
+        return new ArrayList<>(messages);
     }
 
     public List<BuildMessage> getErrorMessages() {
@@ -75,25 +77,25 @@ public class BuildResults {
         this.messages.add(message);
     }
 
-    public void addBuildMessage(final int index,
-                                final BuildMessage message) {
-        this.messages.add(index,
-                          message);
-    }
+//    public void addBuildMessage(final int index,
+//                                final BuildMessage message) {
+//        this.messages.add(index,
+//                          message);
+//    }
 
     public void addAllBuildMessages(List<BuildMessage> buildMessages) {
         messages.addAll(buildMessages);
     }
 
-	public Map<String, String> getParameters() {
-		return parameters;
-	}
-	
-	public void addParameter(String name, String value) {
-		this.parameters.put(name, value);
-	}
-	
-	public String getParameter(String name) {
-		return this.parameters.get(name);
-	}
+    public Map<String, String> getParameters() {
+        return parameters;
+    }
+
+    public void addParameter(String name, String value) {
+        this.parameters.put(name, value);
+    }
+
+    public String getParameter(String name) {
+        return this.parameters.get(name);
+    }
 }

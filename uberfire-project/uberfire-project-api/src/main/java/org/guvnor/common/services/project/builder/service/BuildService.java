@@ -16,16 +16,10 @@
 
 package org.guvnor.common.services.project.builder.service;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.guvnor.common.services.project.builder.model.BuildResults;
-import org.guvnor.common.services.project.builder.model.IncrementalBuildResults;
 import org.guvnor.common.services.project.model.Module;
 import org.guvnor.common.services.project.service.DeploymentMode;
 import org.jboss.errai.bus.server.annotations.Remote;
-import org.uberfire.backend.vfs.Path;
-import org.uberfire.workbench.events.ResourceChange;
 
 @Remote
 public interface BuildService {
@@ -76,29 +70,4 @@ public interface BuildService {
      */
     boolean isBuilt(final Module module);
 
-    /**
-     * Add a Package resource to the build.
-     * @param resource
-     */
-    IncrementalBuildResults addPackageResource(final Path resource);
-
-    /**
-     * Remove a Package resource from the build.
-     * @param resource
-     */
-    IncrementalBuildResults deletePackageResource(final Path resource);
-
-    /**
-     * Update an existing Package resource in the build.
-     * @param resource
-     */
-    IncrementalBuildResults updatePackageResource(final Path resource);
-
-    /**
-     * Process a batch of changes to a Module's resources.
-     * @param module
-     * @param changes
-     */
-    IncrementalBuildResults applyBatchResourceChanges(final Module module,
-                                                      final Map<Path, Collection<ResourceChange>> changes);
 }

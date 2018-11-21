@@ -134,4 +134,16 @@ public class BuildMessage implements Serializable {
         result = ~~result;
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "BuildMessage{" +
+                "id=" + id +
+                ", level=" + level +
+                ", path=" + path +
+                ", line=" + line +
+                ", column=" + column +
+                ", text='" + text + '\'' +
+                '}';
+    }
 }

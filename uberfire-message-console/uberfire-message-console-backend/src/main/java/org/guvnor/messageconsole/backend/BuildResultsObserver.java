@@ -23,7 +23,6 @@ import javax.inject.Inject;
 
 import org.guvnor.common.services.project.builder.model.BuildMessage;
 import org.guvnor.common.services.project.builder.model.BuildResults;
-import org.guvnor.common.services.project.builder.model.IncrementalBuildResults;
 import org.guvnor.messageconsole.events.MessageUtils;
 import org.guvnor.messageconsole.events.PublishBatchMessagesEvent;
 
@@ -46,26 +45,6 @@ public class BuildResultsObserver {
         if (results.getMessages() != null) {
             for (BuildMessage buildMessage : results.getMessages()) {
                 batchMessages.getMessagesToPublish().add(MessageUtils.convert(buildMessage));
-            }
-        }
-
-        publishBatchMessagesEvent.fire(batchMessages);
-    }
-
-    public void addIncrementalBuildMessages(final @Observes IncrementalBuildResults results) {
-
-        PublishBatchMessagesEvent batchMessages = new PublishBatchMessagesEvent();
-        batchMessages.setMessageType(MessageUtils.BUILD_SYSTEM_MESSAGE);
-
-        if (results.getAddedMessages() != null) {
-            for (BuildMessage buildMessage : results.getAddedMessages()) {
-                batchMessages.getMessagesToPublish().add(MessageUtils.convert(buildMessage));
-            }
-        }
-
-        if (results.getRemovedMessages() != null) {
-            for (BuildMessage buildMessage : results.getRemovedMessages()) {
-                batchMessages.getMessagesToUnpublish().add(MessageUtils.convert(buildMessage));
             }
         }
 
