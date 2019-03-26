@@ -86,7 +86,7 @@ public class ActivityBeansCache {
 
     @PostConstruct
     void init() {
-
+        registerGWTEditorProvider();
         final Collection<SyncBeanDef<Activity>> availableActivities = getAvailableActivities();
 
         for (final SyncBeanDef<Activity> activityBean : availableActivities) {
@@ -101,6 +101,9 @@ public class ActivityBeansCache {
             if (isSplashScreen(activityBean.getQualifiers())) {
                 splashActivities.add((SplashScreenActivity) activityBean.getInstance());
             } else {
+                if (isClientEditor(activityBean.getQualifiers())) {
+                    registerGWTClientBean(id, activityBean);
+                }
                 final Pair<Integer, List<String>> metaInfo = generateActivityMetaInfo(activityBean);
                 if (metaInfo != null) {
                     addResourceActivity(activityBean,
@@ -118,6 +121,50 @@ public class ActivityBeansCache {
         activitiesById.put(id,
                            activityBean);
     }
+    private native void registerGWTEditorProvider() /*-{
+        console.log("registerGWTEditorProvider")
+        $wnd.gwtEditorBeans = new Map();
+        $wnd.resolveEditor = function (id) {
+            return $wnd.gwtEditorBeans.get(id);
+        }
+
+        $wnd.GWTEditor = function (instance) {
+            this.instance = instance;
+        }
+
+        $wnd.GWTEditor.prototype.isDirty = function () {
+            return this.instance.@org.uberfire.client.mvp.WorkbenchClientEditorActivity::isDirty();
+        }
+
+        $wnd.GWTEditor.prototype.onOpen = function () {
+            this.instance.@org.uberfire.client.mvp.WorkbenchClientEditorActivity::onOpen()();
+        }
+
+        $wnd.GWTEditor.prototype.setContent = function (value) {
+            this.instance.@org.uberfire.client.mvp.WorkbenchClientEditorActivity::setContent(Ljava/lang/String;)(value);
+        }
+
+        $wnd.GWTEditor.prototype.getContent = function () {
+            return this.instance.@org.uberfire.client.mvp.WorkbenchClientEditorActivity::getContent()();
+        }
+
+        $wnd.GWTEditor.prototype.getView = function () {
+            return this.instance.@org.uberfire.client.mvp.WorkbenchClientEditorActivity::getWidgetElement()();
+        }
+
+        $wnd.GWTEditorSuplier = function (bean) {
+            this.bean = bean;
+        }
+
+        $wnd.GWTEditorSuplier.prototype.newInstance = function () {
+            return new $wnd.GWTEditor(this.bean.@org.jboss.errai.ioc.client.container.SyncBeanDef::newInstance()());
+        }
+
+    }-*/;
+
+    private native void registerGWTClientBean(final String id, final SyncBeanDef<Activity> activityBean) /*-{
+        $wnd.gwtEditorBeans.set(id, new $wnd.GWTEditorSuplier(activityBean));
+    }-*/;
 
     private void addResourceActivity(SyncBeanDef<Activity> activityBean,
                                      Pair<Integer, List<String>> metaInfo) {
@@ -141,6 +188,15 @@ public class ActivityBeansCache {
     private boolean isSplashScreen(final Set<Annotation> qualifiers) {
         for (final Annotation qualifier : qualifiers) {
             if (qualifier instanceof IsSplashScreen) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isClientEditor(final Set<Annotation> qualifiers) {
+        for (final Annotation qualifier : qualifiers) {
+            if (qualifier instanceof IsClientEditor) {
                 return true;
             }
         }
@@ -243,6 +299,9 @@ public class ActivityBeansCache {
      * was registered under.
      */
     public SyncBeanDef<Activity> getActivity(final String id) {
+        if (id == null){
+            return null;
+        }
         return activitiesById.get(id);
     }
 
@@ -258,7 +317,7 @@ public class ActivityBeansCache {
                 .filter(activityAndMetaInfo -> activitySupportsPath(activityAndMetaInfo, path))
                 .findAny();
 
-        if(optional.isPresent()) {
+        if (optional.isPresent()) {
             return optional.get().getActivityBean();
         }
 
@@ -268,7 +327,7 @@ public class ActivityBeansCache {
     private boolean activitySupportsPath(ActivityAndMetaInfo activity, Path path) {
 
         // Check if the editor activity is experimental && enabled
-        if(experimentalActivitiesAuthorizationManager.authorizeActivityClass(activity.getActivityBean().getBeanClass())) {
+        if (experimentalActivitiesAuthorizationManager.authorizeActivityClass(activity.getActivityBean().getBeanClass())) {
 
             // Check if the editor resources types support the given path
             return Stream.of(activity.getResourceTypes())
@@ -294,6 +353,9 @@ public class ActivityBeansCache {
 
     public List<String> getActivitiesById() {
         return new ArrayList<String>(activitiesById.keySet());
+    }
+
+    public void noOp() {
     }
 
     public class EditorResourceTypeNotFound extends RuntimeException {

@@ -494,7 +494,9 @@ public class PlaceManagerImpl
         if (resolved.getActivity() != null) {
             final Activity activity = resolved.getActivity();
 
-            if (activity.isType(ActivityResourceType.EDITOR.name()) || activity.isType(ActivityResourceType.SCREEN.name())) {
+            if (activity.isType(ActivityResourceType.EDITOR.name()) ||
+                    activity.isType(ActivityResourceType.CLIENT_EDITOR.name()) ||
+                    activity.isType(ActivityResourceType.SCREEN.name())) {
                 final WorkbenchActivity workbenchActivity = (WorkbenchActivity) activity;
                 launchWorkbenchActivityInPanel(place,
                                                workbenchActivity,
