@@ -95,8 +95,7 @@ public class ActivityBeansCache {
 
             validateUniqueness(id);
 
-            activitiesById.put(id,
-                               activityBean);
+            activitiesById.put(id, activityBean);
 
             if (isSplashScreen(activityBean.getQualifiers())) {
                 splashActivities.add((SplashScreenActivity) activityBean.getInstance());
@@ -113,6 +112,7 @@ public class ActivityBeansCache {
         }
 
         this.resourceTypeManagerCache.sortResourceActivitiesByPriority();
+        notifyJSReady();
     }
 
     private void put(final SyncBeanDef<Activity> activityBean,
@@ -121,6 +121,10 @@ public class ActivityBeansCache {
         activitiesById.put(id,
                            activityBean);
     }
+    private native void notifyJSReady() /*-{
+        $wnd.appFormerGwtFinishedLoading();
+    }-*/;
+
     private native void registerGWTEditorProvider() /*-{
         console.log("registerGWTEditorProvider")
         $wnd.gwtEditorBeans = new Map();
@@ -299,7 +303,7 @@ public class ActivityBeansCache {
      * was registered under.
      */
     public SyncBeanDef<Activity> getActivity(final String id) {
-        if (id == null){
+        if (id == null) {
             return null;
         }
         return activitiesById.get(id);
