@@ -122,7 +122,9 @@ public class ActivityBeansCache {
                            activityBean);
     }
     private native void notifyJSReady() /*-{
-        $wnd.appFormerGwtFinishedLoading();
+        if ($wnd.appFormerGwtFinishedLoading) {
+            $wnd.appFormerGwtFinishedLoading();
+        }
     }-*/;
 
     private native void registerGWTEditorProvider() /*-{
