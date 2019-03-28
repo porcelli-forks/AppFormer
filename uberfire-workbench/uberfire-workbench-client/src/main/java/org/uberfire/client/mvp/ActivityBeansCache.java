@@ -102,6 +102,8 @@ public class ActivityBeansCache {
             } else {
                 if (isClientEditor(activityBean.getQualifiers())) {
                     registerGWTClientBean(id, activityBean);
+                } else if (isTemplatePerspective(activityBean.getQualifiers())) {
+                    registerGWTPerspectiveBean(id, activityBean);
                 }
                 final Pair<Integer, List<String>> metaInfo = generateActivityMetaInfo(activityBean);
                 if (metaInfo != null) {
@@ -130,8 +132,13 @@ public class ActivityBeansCache {
     private native void registerGWTEditorProvider() /*-{
         console.log("registerGWTEditorProvider")
         $wnd.gwtEditorBeans = new Map();
+        $wnd.gwtPerspectiveBeans = new Map();
         $wnd.resolveEditor = function (id) {
             return $wnd.gwtEditorBeans.get(id);
+        }
+
+        $wnd.resolvePerspective = function (id) {
+            return $wnd.gwtPerspectiveBeans.get(id);
         }
 
         $wnd.GWTEditor = function (instance) {
@@ -158,18 +165,37 @@ public class ActivityBeansCache {
             return this.instance.@org.uberfire.client.mvp.WorkbenchClientEditorActivity::getWidgetElement()();
         }
 
-        $wnd.GWTEditorSuplier = function (bean) {
+        $wnd.GWTEditorSupplier = function (bean) {
             this.bean = bean;
         }
 
-        $wnd.GWTEditorSuplier.prototype.newInstance = function () {
+        $wnd.GWTEditorSupplier.prototype.get = function () {
             return new $wnd.GWTEditor(this.bean.@org.jboss.errai.ioc.client.container.SyncBeanDef::newInstance()());
         }
 
+        $wnd.GWTPerspective = function (instance) {
+            this.instance = instance;
+        }
+
+        $wnd.GWTPerspective.prototype.getView = function () {
+            return this.instance.@org.uberfire.client.mvp.TemplatedActivity::getRootElement()();
+        }
+
+        $wnd.GWTPerspectiveSupplier = function (bean) {
+            this.bean = bean;
+        }
+
+        $wnd.GWTPerspectiveSupplier.prototype.get = function () {
+            return new $wnd.GWTPerspective(this.bean.@org.jboss.errai.ioc.client.container.SyncBeanDef::newInstance()());
+        }
     }-*/;
 
     private native void registerGWTClientBean(final String id, final SyncBeanDef<Activity> activityBean) /*-{
-        $wnd.gwtEditorBeans.set(id, new $wnd.GWTEditorSuplier(activityBean));
+        $wnd.gwtEditorBeans.set(id, new $wnd.GWTEditorSupplier(activityBean));
+    }-*/;
+
+    private native void registerGWTPerspectiveBean(final String id, final SyncBeanDef<Activity> activityBean) /*-{
+        $wnd.gwtPerspectiveBeans.set(id, new $wnd.GWTPerspectiveSupplier(activityBean));
     }-*/;
 
     private void addResourceActivity(SyncBeanDef<Activity> activityBean,
@@ -194,6 +220,15 @@ public class ActivityBeansCache {
     private boolean isSplashScreen(final Set<Annotation> qualifiers) {
         for (final Annotation qualifier : qualifiers) {
             if (qualifier instanceof IsSplashScreen) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isTemplatePerspective(final Set<Annotation> qualifiers) {
+        for (final Annotation qualifier : qualifiers) {
+            if (qualifier instanceof IsTemplatePerspective) {
                 return true;
             }
         }
