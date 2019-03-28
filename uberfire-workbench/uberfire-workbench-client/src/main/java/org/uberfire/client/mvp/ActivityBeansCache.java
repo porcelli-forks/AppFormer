@@ -112,7 +112,6 @@ public class ActivityBeansCache {
         }
 
         this.resourceTypeManagerCache.sortResourceActivitiesByPriority();
-        notifyJSReady();
     }
 
     private void put(final SyncBeanDef<Activity> activityBean,

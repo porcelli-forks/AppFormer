@@ -237,7 +237,15 @@ public class Workbench {
 
         // Defer the initial resize call until widgets are rendered and sizes are available
         Scheduler.get().scheduleDeferred(() -> layout.onResize());
+
+        notifyJSReady();
     }
+
+    private native void notifyJSReady() /*-{
+        if ($wnd.appFormerGwtFinishedLoading) {
+            $wnd.appFormerGwtFinishedLoading();
+        }
+    }-*/;
 
     // TODO add tests for standalone startup vs. full startup
     private void handleStandaloneMode(final Map<String, List<String>> parameters) {
