@@ -83,8 +83,7 @@ import static org.uberfire.plugin.PluginUtil.toInteger;
 
 @SharedSingleton
 @EnabledByProperty(value = "uberfire.plugin.mode.active", negated = true)
-public class PlaceManagerImpl
-        implements PlaceManager {
+public class PlaceManagerImpl implements PlaceManager {
 
     /**
      * Activities that have been created by us but not destroyed (TODO: move this state tracking to ActivityManager!).
@@ -221,6 +220,13 @@ public class PlaceManagerImpl
         goToTargetPanel(place,
                         panelManager.addCustomPanel(addTo,
                                                     UnanchoredStaticWorkbenchPanelPresenter.class.getName()));
+    }
+
+    @Override
+    public void goTo(final String id,
+                     final HTMLElement addTo) {
+        final DefaultPlaceRequest place = new DefaultPlaceRequest(id);
+        goTo(place, addTo);
     }
 
     @Override
